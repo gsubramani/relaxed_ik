@@ -24,7 +24,9 @@ if __name__ == '__main__':
     rospy.init_node('sample_node')
 
     ####################################################################################################################
-    relaxedIK = RelaxedIK.init_from_config('hubo.config')
+#    relaxedIK = RelaxedIK.init_from_config('hubo.config')
+    relaxedIK = RelaxedIK.init_from_config(collision_file_name)
+
     ####################################################################################################################
 
     urdf_file = open(relaxedIK.vars.urdf_path, 'r')

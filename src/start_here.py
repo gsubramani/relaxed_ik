@@ -95,7 +95,7 @@ joint_names = [['right_j0','right_j1','right_j2','right_j3','right_j4','right_j5
 #   ex1: [ 'WAIST', 'RIGHT_SHOULDER_PITCH', 'RIGHT_SHOULDER_ROLL', 'RIGHT_SHOULDER_YAW', 'RIGHT_ELBOW', 'RIGHT_WRIST_YAW',
 #               'RIGHT_WRIST_PITCH', 'RIGHT_WRIST_YAW_2','LEFT_SHOULDER_PITCH', 'LEFT_SHOULDER_ROLL', 'LEFT_SHOULDER_YAW',
 #               'LEFT_ELBOW', 'LEFT_WRIST_YAW', 'LEFT_WRIST_PITCH', 'LEFT_WRIST_YAW_2' ]
-joint_ordering = [['right_j0','right_j1','right_j2','right_j3','right_j4','right_j5','right_j6' ]]
+joint_ordering = ['right_j0','right_j1','right_j2','right_j3','right_j4','right_j5','right_j6' ]
 ######################################################################################################
 
 
@@ -120,7 +120,7 @@ ee_fixed_joints = ['right_hand']
 #   The configuration should be a single list of values for each joint's rotation (in radians) adhering
 #   to the joint order you specified in Step 3b
 #   ex: starting_config = [ 3.12769839, -0.03987385, -2.07729916, -1.03981438, -1.58652782, -1.5710159 ]
-starting_config = [ ]
+starting_config = [0.0]*7
 ######################################################################################################
 
 
@@ -291,7 +291,7 @@ collision_file_name = 'collision_sawyer.yaml'
 #   RelaxedIK/Config directory.
 #   Please provide the name of the file that you renamed your config file to
 #   ex: config_file_name = 'ur5.config'
-config_file_name = ''
+config_file_name = 'relaxedIK.config'
 ######################################################################################################
 
 
