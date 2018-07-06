@@ -3,7 +3,7 @@
 author: Danny Rakita
 website: http://pages.cs.wisc.edu/~rakita/
 email: rakita@cs.wisc.edu
-last update: 5/9/18
+last update: 7/2/18
 
 Intro: Welcome to RelaxedIK! RelaxedIK is an inverse kinematics (IK) solver designed for robot platforms such that the conversion
 between Cartesian end-effector pose goals (such as "move the robot's right arm end-effector to position X, while maintaining an end-effector
@@ -22,6 +22,11 @@ or negative experiences in using it.
 
 
 # Step-by-step guide starts here!
+
+######################################################################################################
+# NOTE: IF YOU ALREADY HAVE A PRE-MADE RelaxedIK CONFIG FILE, MAKE SURE THIS IS IN THE RelaxedIK/Config
+#   DIRECTORY, AND FEEL FREE TO SKIP TO STEP 7a.
+######################################################################################################
 
 
 ######################################################################################################
@@ -87,11 +92,12 @@ joint_names = [['right_j0','right_j1','right_j2','right_j3','right_j4','right_j5
 # Step 3b: Please provide the order that you want joints to appear in the final returned joint configurations,
 #   using the names specified in step 3a.  ALL JOINTS specified in step 3a should appear somewhere in
 #   this list.  If the same joint appears in separate chains in step 3a, it should only appear once in
-#   the list here.  If you are using a single chain robot, feel free to use the exact same list
+#   the list here.  If you are using a single chain robot, feel free to use the same joint list
 #   that appears in step 3a.
 #   example 1 shows one possible ordering for example 1 in Step 3a.  Notice how in this example, the 'WAIST'
 #   joint only shows up once in the joint ordering list, even though it was a part of two separate subchains in
 #   Step 3a.
+#   NOTE: This is a single list NOT a list of lists like in Step 3a.
 #   ex1: [ 'WAIST', 'RIGHT_SHOULDER_PITCH', 'RIGHT_SHOULDER_ROLL', 'RIGHT_SHOULDER_YAW', 'RIGHT_ELBOW', 'RIGHT_WRIST_YAW',
 #               'RIGHT_WRIST_PITCH', 'RIGHT_WRIST_YAW_2','LEFT_SHOULDER_PITCH', 'LEFT_SHOULDER_ROLL', 'LEFT_SHOULDER_YAW',
 #               'LEFT_ELBOW', 'LEFT_WRIST_YAW', 'LEFT_WRIST_PITCH', 'LEFT_WRIST_YAW_2' ]
@@ -104,7 +110,7 @@ joint_ordering = ['right_j0','right_j1','right_j2','right_j3','right_j4','right_
 #   "fixed" in the urdf, and specify the exact "grasping point" of the robot's hand.  If it appears
 #   that your urdf does not specify this ahead of time, please add it to the urdf.  Make sure to provide
 #   one end-effector joint name per chain (i.e., each chain will have its own end-effector).  The order of
-#   these joint names should correspond to the ordering of the chains specified in Step 3b.
+#   these joint names should correspond to the ordering of the chains specified in Step 3a.
 #   For example 1, using the DRC-Hubo+ robot, we should specify two separate fixed joint names, one
 #   for the right hand and one for the left hand
 #   ex1: ee_fixed_joints = ['RIGHT_HAND', 'LEFT_HAND']
@@ -140,7 +146,7 @@ starting_config = [0.0]*7
 # from sensor_msgs.msg import JointState
 # def joint_state_define(x):
 #    js = JointState()
-#    js.name = joint_names[0]
+#    js.name = joint_ordering
 #    js.position = tuple(x)
 #    return js
 #
@@ -221,9 +227,15 @@ def joint_state_define(x):
 #   These sample states help the robot decide the difference between a configuration that is close to collision state and
 #   a configuration where two links are natively and safely close together.  THIS STEP IS VERY IMPORTANT FOR THE NEURAL
 #   NETWORK TO LEARN A GOOD COLLISION FUNCTION.  A set of 5 - 10 configurations where the robot is not in collision has been
-#   seen to work well, but more will always be better.  Add these collision-free sample states as lists next to the samples_states
-#   field in your yaml file, as seen in the collision_example.yaml file.  Feel free to use the urdf_viewer tool provided
-#   in this project to pick out collision-free sample states.
+#   seen to work well, but more will always be better.  Good candidates for "sample states" are robot configurations that are
+#   somewhat close to collisions states, but do not exhibit a collision.  If it seems like the robot is being too cautious after 
+#   training the neural network (i.e., it is staying too far away from collision states), include more sample states that are closer to
+#   collision states without colliding.
+#
+#   Add these collision-free sample states as lists next to the samples_states field in your yaml file, as seen in
+#   the collision_example.yaml file.  Feel free to use the urdf_viewer tool provided in the relaxed_ik package to pick out
+#   collision-free sample states.  Joint states are displayed in the console window when using this tool to make
+#   them easier to copy and paste into the collision yaml file.
 #
 #   To start this tool, use the command:
 #       roslaunch relaxed_ik urdf_viewer.launch
@@ -299,8 +311,60 @@ config_file_name = 'relaxedIK.config'
 # Step 6: Your RelaxedIK solver is ready to go!  To see sample output, run the following command:
 #   roslaunch relaxed_ik sample.launch
 #
-#   You should see your robot in rviz moving its end effector up and down
+#   You should see your robot in rviz moving its end effector back and forth
 ######################################################################################################
+
+
+######################################################################################################
+# Step 7a: Now that you have a relaxedIK config file in the RelaxedIK/Config directory, you can use the relaxedIK
+#   solver as a standalone ROS node.  To start up the node, first go to the relaxed_ik.launch file (found in
+#   the launch directory) and set the 'config_file_name' argument to your desired configuration file
+#   example: <arg name="config_file_name" value="ur5.config" />
+#
+#   Next, start the node with the following command:
+#   roslaunch relaxed_ik relaxed_ik.launch
+#
+#   Using this command, your relaxed_ik solver will initialize in its own node and will await
+#   end effector pose goal commands.  Refer to step 7b for instructions on publishing end effector
+#   pose goals and receiving solutions.
+######################################################################################################
+
+
+######################################################################################################
+# Step 7b: To receive solutions from the relaxed_ik node launched in Step 7a, you first have to publish
+#   end effector pose goals for each of the end effectors in the kinematic chain.  The relaxed_ik package
+#   provides a custom message called EEPoseGoals which encapsulates all necessary pose goal information.
+#
+#   The EEPoseGoals message has the following fields:
+#      std_msgs/Header header
+#      geometry_msgs/Pose[] ee_poses
+#
+#   The header is a standard header that can include a time stamp, sequence number, or frame id.
+#   The ee_poses field should contain the end effector poses for all end effectors specified in Step 3c.
+#   These poses in ee_poses should consist of a position goal (x,y,z) and quaternion orientation goal (w,x,y,z)
+#   for all end effectors.
+#
+#   IMPORTANT: All position goals and orientation goals are specified with respect to the INITIAL CONFIGURATION
+#       specified in Step 3d.  For example, for a robot platform with two end effectors, ee_poses of
+#       < pose1: Point:[0,0,0],Orientation:[1,0,0,0], pose2: Point:[0,0,0],Orientation:[1,0,0,0] >
+#       will just return the initial configuration specified in Step 3d.
+#
+#   To get a solution from relaxed_ik, publish EEPoseGoals messages on the topic '/relaxed_ik/ee_pose_goals'
+#   A solution (i.e., a vector of joint angles) will be published on the topic '/relaxed_ik/joint_angle_solutions'
+#
+#   Solutions will be of a message type called JointAngles, which is another custom message type
+#   in the relaxed_ik package.
+#
+#   The JointAngles message has the following fields:
+#       std_msgs/Header header
+#       std_msgs/Float32[] angles
+#
+#   The header is a standard header that corresponds to the exact header from the input EEPoseGoals message 
+#   (the header sequence number can be used to get a correspondence between input pose goals and output joint solutions 
+#   in a stream of solutions)
+#   The angles field contains the joint angle solutions as Float32 values, adhering to the naming order
+#   provided in step 3b when the configuration file was created.
+#######################################################################################################
 
 
 # Step-by-step guide ends here!

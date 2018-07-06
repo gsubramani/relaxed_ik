@@ -13,7 +13,7 @@ kinematic-singularities, or joint-space discontinuities.
 
 To start using the solver, please follow the step-by-step instructions in the file start_here.py (in the root directory)
 
-If anything with the solver is not working as expected, or if you have any feedback, feel free to let us know! (email: rakita@cs.wisc.edu, website: http://pages.cs.wisc.edu/~rakita/)
+If anything with the solver is not working as expected, or if you have any feedback, feel free to let us know! (email: rakita@cs.wisc.edu, website: http://pages.cs.wisc.edu/~rakita)
 We are actively supporting and extending this code, so we are interested to hear about how the solver is being used and any positive or negative experiences in using it.
 
 <b> Citation </b>
@@ -85,6 +85,10 @@ The boost c++ libraries are used to interface between c++ and python code in the
 scikit learn:
 http://scikit-learn.org/stable/index.html
 
+
+<b> Tutorial </b>
+
+For full setup and usage details, please refer to start_here.py in the src directory.
 
 <b> Coming Soon </b>
 
